@@ -7,6 +7,9 @@ export default function Admin() {
   const { user } = useAppContext();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [newItem, setNewItem] = useState({ name: '', description: '', price: '', imageUrl: '', stock: '' });
+  const [adding, setAdding] = useState(false);
 
   useEffect(() => {
     if (user && user.role === 'admin') {
@@ -35,6 +38,25 @@ export default function Admin() {
     }
   };
 
+  const handleAddItem = async () => {
+    setAdding(true);
+    try {
+      await catalogAPI.addProduct({
+        ...newItem,
+        price: parseFloat(newItem.price),
+        stock: parseInt(newItem.stock),
+      });
+      setShowModal(false);
+      setNewItem({ name: '', description: '', price: '', imageUrl: '', stock: '' });
+      alert('Item added successfully!');
+    } catch (err) {
+      alert('Failed to add item.');
+      console.error(err);
+    } finally {
+      setAdding(false);
+    }
+  };
+
   if (!user || user.role !== 'admin') return <div className="text-center py-8 text-error">Forbidden: Admin only</div>;
   if (loading) return <div className="text-center py-8">Loading admin panel...</div>;
 
@@ -43,6 +65,7 @@ export default function Admin() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>Admin Dashboard</h1>
         <button className="btn-outline" onClick={handleSeed}>Seed Catalog DB</button>
+        <button className="btn-primary" onClick={() => setShowModal(true)}>+ Add Item</button>
       </div>
 
       <div className="glass" style={{ padding: '2rem' }}>
@@ -88,6 +111,30 @@ export default function Admin() {
           </tbody>
         </table>
       </div>
+
+      {showModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div className="glass" style={{ padding: '2rem', width: '400px', borderRadius: '12px' }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1.5rem' }}>Add New Item</h2>
+            {['name', 'description', 'price', 'imageUrl', 'stock'].map(field => (
+              <input
+                key={field}
+                className="input-field"
+                placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
+                value={newItem[field]}
+                onChange={e => setNewItem({ ...newItem, [field]: e.target.value })}
+                style={{ display: 'block', width: '100%', marginBottom: '1rem' }}
+              />
+            ))}
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+              <button className="btn-outline" onClick={() => setShowModal(false)}>Cancel</button>
+              <button className="btn-primary" onClick={handleAddItem} disabled={adding}>
+                {adding ? 'Adding...' : 'Add Item'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
