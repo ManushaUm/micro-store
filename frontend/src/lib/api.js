@@ -21,7 +21,8 @@ api.interceptors.request.use((config) => {
 export const authAPI = {
   login: (data) => api.post('http://localhost:3001/auth/login', data).then(r => r.data),
   register: (data) => api.post('http://localhost:3001/auth/register', data).then(r => r.data),
-  verify: () => api.get('http://localhost:3001/auth/verify').then(r => r.data)
+  verify: () => api.get('http://localhost:3001/auth/verify').then(r => r.data),
+  googleLogin: (credential) => api.post('http://localhost:3001/auth/google-login', { credential }).then(r => r.data)
 };
 
 export const catalogAPI = {

@@ -14,14 +14,20 @@ const initDB = async () => {
     CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
       email VARCHAR(255) UNIQUE NOT NULL,
-      password VARCHAR(255) NOT NULL,
+      password VARCHAR(255),
       role VARCHAR(50) DEFAULT 'user',
+      google_id VARCHAR(255) UNIQUE,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
   `;
   try {
     await pool.query(queryText);
     console.log('Users table created or exists');
+    
+    // Migrations to support Google Login if the table already exists
+    await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id VARCHAR(255) UNIQUE;`);
+    await pool.query(`ALTER TABLE users ALTER COLUMN password DROP NOT NULL;`);
+    console.log('Users table schema verified for Google Login support');
   } catch (err) {
     console.error('Error creating users table', err);
   }
