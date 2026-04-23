@@ -50,13 +50,27 @@ export default function Profile() {
                 </div>
               </div>
               
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                {(typeof order.items === 'string' ? JSON.parse(order.items) : order.items).map((item, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '1rem', fontSize: '0.875rem' }}>
-                    <Package size={16} style={{ color: '#94a3b8' }}/>
-                    <span>{item.quantity} × {item.name}</span>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
+                <div>
+                  <h4 style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Items</h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    {(typeof order.items === 'string' ? JSON.parse(order.items) : order.items).map((item, i) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.875rem' }}>
+                        <Package size={14} style={{ color: '#94a3b8' }}/>
+                        <span>{item.quantity} × {item.name}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                </div>
+                <div>
+                   <h4 style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '0.5rem' }}>Delivery & Payment</h4>
+                   {order.delivery_details && (
+                     <div style={{ fontSize: '0.875rem', color: '#f1f5f9' }}>
+                        <p>{order.delivery_details.address}, {order.delivery_details.city}</p>
+                        <p style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Method: <span style={{ color: 'var(--primary)', fontWeight: 'bold', textTransform: 'uppercase' }}>{order.payment_method}</span></p>
+                     </div>
+                   )}
+                </div>
               </div>
             </div>
           ))}

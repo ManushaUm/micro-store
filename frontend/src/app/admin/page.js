@@ -54,7 +54,8 @@ export default function Admin() {
               <th style={{ padding: '1rem' }}>Order ID</th>
               <th style={{ padding: '1rem' }}>User ID</th>
               <th style={{ padding: '1rem' }}>Total</th>
-              <th style={{ padding: '1rem' }}>Date</th>
+              <th style={{ padding: '1rem' }}>Pay Method</th>
+              <th style={{ padding: '1rem' }}>Address</th>
               <th style={{ padding: '1rem' }}>Status</th>
               <th style={{ padding: '1rem' }}>Action</th>
             </tr>
@@ -65,9 +66,21 @@ export default function Admin() {
                 <td style={{ padding: '1rem' }}>#{order.id}</td>
                 <td style={{ padding: '1rem' }}>User {order.user_id}</td>
                 <td style={{ padding: '1rem' }}>${parseFloat(order.total).toFixed(2)}</td>
-                <td style={{ padding: '1rem' }}>{new Date(order.created_at).toLocaleDateString()}</td>
                 <td style={{ padding: '1rem' }}>
-                  <span style={{ color: order.status === 'Delivered' ? 'var(--success)' : 'var(--primary)' }}>{order.status}</span>
+                   <span style={{ textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: 'bold' }}>{order.payment_method || 'N/A'}</span>
+                </td>
+                <td style={{ padding: '1rem' }}>
+                  {order.delivery_details ? (
+                    <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                      <p>{order.delivery_details.fullName}</p>
+                      <p>{order.delivery_details.address}, {order.delivery_details.city}</p>
+                      <p>Tel: {order.delivery_details.phone}</p>
+                    </div>
+                  ) : 'N/A'}
+                </td>
+                <td style={{ padding: '1rem' }}>
+                  <span style={{ color: order.status === 'Delivered' ? 'var(--success)' : 'var(--primary)', fontWeight: 'bold' }}>{order.status}</span>
+                  <div style={{ fontSize: '0.65rem', color: '#64748b' }}>{order.payment_status}</div>
                 </td>
                 <td style={{ padding: '1rem' }}>
                   <select 

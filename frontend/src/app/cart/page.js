@@ -23,21 +23,8 @@ export default function Cart() {
     }
   };
 
-  const handleCheckout = async () => {
-    setCheckingOut(true);
-    try {
-      await checkoutAPI.placeOrder({
-        items: cart.items,
-        total: cart.total
-      });
-      await refreshCart(); // Async clean up
-      router.push('/profile');
-    } catch (err) {
-      console.error(err);
-      alert('Checkout failed');
-    } finally {
-      setCheckingOut(false);
-    }
+  const handleCheckout = () => {
+    router.push('/checkout');
   };
 
   return (
