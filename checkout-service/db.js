@@ -14,10 +14,20 @@ const initDB = async () => {
       id SERIAL PRIMARY KEY,
       user_id INTEGER NOT NULL,
       total DECIMAL(10, 2) NOT NULL,
-      status VARCHAR(50) DEFAULT 'Processing',
+      status VARCHAR(50) DEFAULT 'Placed',
       items JSONB NOT NULL,
+      delivery_details JSONB,
+      payment_method VARCHAR(50),
+      payment_status VARCHAR(50) DEFAULT 'Pending',
+      stripe_payment_intent_id VARCHAR(255),
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
+
+    -- Ensure columns exist for existing tables
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_details JSONB;
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_method VARCHAR(50);
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_status VARCHAR(50) DEFAULT 'Pending';
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS stripe_payment_intent_id VARCHAR(255);
   `;
   try {
     await pool.query(queryText);

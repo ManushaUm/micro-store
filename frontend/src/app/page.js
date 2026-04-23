@@ -101,7 +101,7 @@ export default function Home() {
         productId: product._id,
         name: product.name,
         price: product.price,
-        quantity: 1,
+        quantity: qtyChange,
         imageUrl: product.imageUrl
       });
       await refreshCart();
@@ -302,8 +302,8 @@ export default function Home() {
                   </button>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

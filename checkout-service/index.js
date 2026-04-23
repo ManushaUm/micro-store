@@ -3,6 +3,12 @@ const cors = require('cors');
 require('dotenv').config();
 
 const db = require('./db');
+let stripe;
+if (process.env.STRIPE_SECRET_KEY) {
+  stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+} else {
+  console.warn('WARNING: STRIPE_SECRET_KEY is not set. Stripe payments will fail.');
+}
 
 // RabbitMQ will be added in Phase 4
 
@@ -29,22 +35,62 @@ app.get('/health', (req, res) => res.send('Checkout Service Health OK'));
 
 // Create order
 app.post('/checkout', verifyUser, async (req, res) => {
-  const { items, total } = req.body;
+  const { items, total, deliveryDetails, paymentMethod, email } = req.body;
   if (!items || items.length === 0) return res.status(400).json({ error: 'Cart is empty' });
 
   try {
-    // Basic implementation. Caching & robust transaction control could go here
+    let clientSecret = null;
+    let paymentStatus = 'Pending';
+    let stripePaymentIntentId = null;
+
+    if (paymentMethod === 'stripe') {
+      if (!stripe) {
+        return res.status(400).json({ error: 'Stripe is not configured on the server. Please use COD or set STRIPE_SECRET_KEY.' });
+      }
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(total * 100), // amount in cents
+        currency: 'usd',
+        metadata: { userId: req.userId },
+      });
+      clientSecret = paymentIntent.client_secret;
+      stripePaymentIntentId = paymentIntent.id;
+    } else {
+      // COD
+      paymentStatus = 'Pending (COD)';
+    }
+
     const result = await db.query(
-      'INSERT INTO orders (user_id, total, items, status) VALUES ($1, $2, $3, $4) RETURNING *',
-      [req.userId, total, JSON.stringify(items), 'Placed']
+      'INSERT INTO orders (user_id, total, items, status, delivery_details, payment_method, payment_status, stripe_payment_intent_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+      [
+        req.userId, 
+        total, 
+        JSON.stringify(items), 
+        'Placed', 
+        JSON.stringify(deliveryDetails), 
+        paymentMethod, 
+        paymentStatus, 
+        stripePaymentIntentId
+      ]
     );
 
     const order = result.rows[0];
 
     const { publishOrder } = require('./rabbitmq');
-    await publishOrder({ orderId: order.id, userId: order.user_id, items: typeof items === 'string' ? JSON.parse(items) : items });
+    await publishOrder({ 
+      orderId: order.id, 
+      userId: order.user_id, 
+      items: typeof items === 'string' ? JSON.parse(items) : items,
+      deliveryDetails,
+      paymentMethod,
+      email,
+      total // Use the 'total' variable from the request body
+    });
 
-    res.status(201).json({ message: 'Order successful', order });
+    res.status(201).json({ 
+      message: 'Order successful', 
+      order,
+      clientSecret // Will be null for COD
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server Error' });
