@@ -36,18 +36,8 @@ export default function Cart() {
     }
   };
 
-  const handleCheckout = async () => {
-    setCheckingOut(true);
-    try {
-      await checkoutAPI.placeOrder({ items: cart.items, total: cart.total });
-      await refreshCart();
-      router.push('/profile');
-    } catch (err) {
-      console.error(err);
-      alert('Checkout failed. Please try again.');
-    } finally {
-      setCheckingOut(false);
-    }
+  const handleCheckout = () => {
+    router.push('/checkout');
   };
 
   const itemCount = cart?.items?.reduce((a, i) => a + i.quantity, 0) || 0;

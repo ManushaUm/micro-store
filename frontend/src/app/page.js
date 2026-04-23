@@ -5,35 +5,6 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { Plus, Zap, Shield, Truck, Star, ArrowRight, ArrowLeft, Headphones, Monitor, Keyboard, Mouse, ChevronLeft, ChevronRight } from "lucide-react";
 
-// const SLIDES = [
-//   {
-//     badge: '🎧 New arrivals · Spring 2025',
-//     title: 'Discover',
-//     highlight: 'Premium Tech',
-//     sub: 'Elevate your setup with our curated selection of high-end gear. Free shipping on orders over $100.',
-//     emoji: '🎧',
-//     bg: 'linear-gradient(135deg, #0f2a4a 0%, #1e1060 50%, #0f2a4a 100%)',
-//     glow: 'rgba(99,102,241,0.4)',
-//   },
-//   {
-//     badge: '🖥️ Best seller',
-//     title: 'Crystal Clear',
-//     highlight: '4K Displays',
-//     sub: 'Experience true color accuracy with our premium monitor lineup. Designed for creators and gamers alike.',
-//     emoji: '🖥️',
-//     bg: 'linear-gradient(135deg, #0a2a1a 0%, #064e2a 50%, #0a2a1a 100%)',
-//     glow: 'rgba(16,185,129,0.4)',
-//   },
-//   {
-//     badge: '⌨️ Top rated',
-//     title: 'Type with',
-//     highlight: 'Precision',
-//     sub: 'Mechanical keyboards built for performance. Tactile switches, tenkeyless design, and custom keycaps.',
-//     emoji: '⌨️',
-//     bg: 'linear-gradient(135deg, #2a1a0a 0%, #4e2a06 50%, #2a1a0a 100%)',
-//     glow: 'rgba(245,158,11,0.4)',
-//   },
-// ];
 const SLIDES = [
   {
     badge: '🎧 New arrivals · Spring 2025',
@@ -44,7 +15,6 @@ const SLIDES = [
     bg: 'linear-gradient(135deg, #0f2a4a 0%, #1e1060 50%, #0f2a4a 100%)',
     glow: 'rgba(99,102,241,0.4)',
   },
-
   {
     badge: '🖥️ Best seller',
     title: 'Crystal Clear',
@@ -54,7 +24,6 @@ const SLIDES = [
     bg: 'linear-gradient(135deg, #0b1b3a 0%, #2a145f 50%, #111827 100%)',
     glow: 'rgba(99,102,241,0.35)',
   },
-
   {
     badge: '⌨️ Top rated',
     title: 'Type with',
@@ -101,7 +70,7 @@ export default function Home() {
         productId: product._id,
         name: product.name,
         price: product.price,
-        quantity: qtyChange,
+        quantity: 1,
         imageUrl: product.imageUrl
       });
       await refreshCart();
@@ -278,7 +247,7 @@ export default function Home() {
                   </span>
                 )}
                 <div style={{ position: 'absolute', bottom: '10px', right: '10px', display: 'flex', gap: '2px' }}>
-                  {[1,2,3,4,5].map(s => <Star key={s} size={10} fill="#f59e0b" color="#f59e0b" />)}
+                  {[1, 2, 3, 4, 5].map(s => <Star key={s} size={10} fill="#f59e0b" color="#f59e0b" />)}
                 </div>
               </div>
               <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
@@ -302,8 +271,8 @@ export default function Home() {
                   </button>
                 </div>
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       )}
 
