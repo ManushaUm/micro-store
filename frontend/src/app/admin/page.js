@@ -111,6 +111,7 @@ export default function Admin() {
                     value={order.status}
                     onChange={(e) => handleStatusChange(order.id, e.target.value)}
                     style={{ width: 'auto', padding: '0.25rem 0.5rem', backgroundColor: '#0f172a' }}
+                    disabled={order.status === 'Cancelled'}
                   >
                     <option value="Placed">Placed</option>
                     <option value="Processing">Processing</option>

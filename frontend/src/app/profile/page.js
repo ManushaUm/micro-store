@@ -18,6 +18,17 @@ export default function Profile() {
     }
   }, [user]);
 
+  const handleCancel = async (id) => {
+    if (!confirm('Are you sure you want to cancel this order?')) return;
+    try {
+      await checkoutAPI.cancelOrder(id);
+      setOrders(orders.map(o => o.id === id ? { ...o, status: 'Cancelled' } : o));
+    } catch (err) {
+      alert('Could not cancel order.');
+    }
+  };
+
+
   if (!user) return <div className="text-center py-8">Please login.</div>;
   if (loading) return <div className="text-center py-8">Loading orders...</div>;
 
@@ -72,6 +83,17 @@ export default function Profile() {
                    )}
                 </div>
               </div>
+
+              {['Placed', 'Processing'].includes(order.status) && (
+                <button
+                  className="btn-outline"
+                  onClick={() => handleCancel(order.id)}
+                  style={{ marginTop: '1rem' }}
+                >
+                  Cancel Order
+                </button>
+              )}
+
             </div>
           ))}
         </div>

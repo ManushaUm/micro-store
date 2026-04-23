@@ -118,12 +118,50 @@ app.get('/admin/orders', isAdmin, async (req, res) => {
 });
 
 // Admin: Update order status
+// Admin: Update order status
 app.put('/admin/orders/:id/status', isAdmin, async (req, res) => {
   const { status } = req.body;
   try {
+    const existing = await db.query('SELECT * FROM orders WHERE id = $1', [req.params.id]);
+    const order = existing.rows[0];
+
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+
+    // Prevent changing a cancelled order
+    if (order.status === 'Cancelled') {
+      return res.status(400).json({ error: 'Cannot update a cancelled order' });
+    }
+
     const result = await db.query('UPDATE orders SET status = $1 WHERE id = $2 RETURNING *', [status, req.params.id]);
     res.json(result.rows[0]);
   } catch (err) {
+    res.status(500).json({ error: 'Server Error' });
+  }
+});
+
+// Cancel order (user side)
+app.put('/orders/:id/cancel', verifyUser, async (req, res) => {
+  try {
+    const result = await db.query(
+      'SELECT * FROM orders WHERE id = $1 AND user_id = $2',
+      [req.params.id, req.userId]
+    );
+
+    const order = result.rows[0];
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+
+    if (['Shipped', 'Delivered'].includes(order.status)) {
+      return res.status(400).json({ error: 'Cannot cancel a shipped or delivered order' });
+    }
+
+    const updated = await db.query(
+      'UPDATE orders SET status = $1 WHERE id = $2 RETURNING *',
+      ['Cancelled', req.params.id]
+    );
+
+    res.json(updated.rows[0]);
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Server Error' });
   }
 });
