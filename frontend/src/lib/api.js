@@ -27,7 +27,8 @@ export const authAPI = {
 export const catalogAPI = {
   getProducts: () => api.get('http://localhost:3002/products').then(r => r.data),
   getProduct: (id) => api.get(`http://localhost:3002/products/${id}`).then(r => r.data),
-  seed: () => api.post('http://localhost:3002/products/seed').then(r => r.data)
+  seed: () => api.post('http://localhost:3002/products/seed').then(r => r.data),
+  addProduct: (data) => api.post('http://localhost:3002/products', data).then(r => r.data),
 };
 
 export const cartAPI = {
