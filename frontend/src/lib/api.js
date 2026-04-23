@@ -41,5 +41,6 @@ export const checkoutAPI = {
   placeOrder: (data) => api.post('http://localhost:3004/checkout', data).then(r => r.data),
   getOrders: () => api.get('http://localhost:3004/orders').then(r => r.data),
   getAdminOrders: () => api.get('http://localhost:3004/admin/orders').then(r => r.data),
-  updateOrderStatus: (id, status) => api.put(`http://localhost:3004/admin/orders/${id}/status`, { status }).then(r => r.data)
+  updateOrderStatus: (id, status) => api.put(`http://localhost:3004/admin/orders/${id}/status`, { status }).then(r => r.data),
+  cancelOrder: (id) => api.put(`http://localhost:3004/orders/${id}/cancel`).then(r => r.data),
 };
