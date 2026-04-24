@@ -26,6 +26,20 @@ export default function Admin() {
     }
   }, [user]);
 
+  const handleImageUpload = (e, isEdit = false) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      if (isEdit) {
+        setEditItem({ ...editItem, imageUrl: reader.result });
+      } else {
+        setNewItem({ ...newItem, imageUrl: reader.result });
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleStatusChange = async (id, status) => {
     try {
       await checkoutAPI.updateOrderStatus(id, status);
@@ -211,7 +225,7 @@ export default function Admin() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
           <div style={{ padding: '2rem', width: '400px', borderRadius: '12px', backgroundColor: '#1e293b', border: '1px solid rgba(255,255,255,0.1)' }}>
             <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1.5rem' }}>Add New Product</h2>
-            {['name', 'description', 'price', 'imageUrl', 'stock'].map(field => (
+            {['name', 'description', 'price', 'stock'].map(field => (
               <input
                 key={field}
                 className="input-field"
@@ -221,6 +235,27 @@ export default function Admin() {
                 style={{ display: 'block', width: '100%', marginBottom: '1rem' }}
               />
             ))}
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{
+                display: 'flex', alignItems: 'center', gap: '0.75rem',
+                padding: '0.6rem 1rem', borderRadius: '8px',
+                border: '1px solid rgba(255,255,255,0.15)',
+                backgroundColor: '#0f172a', cursor: 'pointer'
+              }}>
+                <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem' }}>
+                  {newItem.imageUrl ? '✓ Image selected' : 'Choose image...'}
+                </span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleImageUpload(e, false)}
+                  style={{ display: 'none' }}
+                />
+              </label>
+            </div>
+            {newItem.imageUrl && (
+              <img src={newItem.imageUrl} style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: '8px', marginBottom: '1rem' }} />
+            )}
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
               <button className="btn-outline" onClick={() => setShowModal(false)}>Cancel</button>
               <button className="btn-primary" onClick={handleAddItem} disabled={adding}>
@@ -235,7 +270,7 @@ export default function Admin() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
           <div style={{ padding: '2rem', width: '400px', borderRadius: '12px', backgroundColor: '#1e293b', border: '1px solid rgba(255,255,255,0.1)' }}>
             <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1.5rem' }}>Edit Product</h2>
-            {['name', 'description', 'price', 'imageUrl', 'stock'].map(field => (
+            {['name', 'description', 'price', 'stock'].map(field => (
               <input
                 key={field}
                 className="input-field"
@@ -245,6 +280,27 @@ export default function Admin() {
                 style={{ display: 'block', width: '100%', marginBottom: '1rem' }}
               />
             ))}
+            <div style={{ marginBottom: '1rem' }}>
+            <label style={{
+              display: 'flex', alignItems: 'center', gap: '0.75rem',
+              padding: '0.6rem 1rem', borderRadius: '8px',
+              border: '1px solid rgba(255,255,255,0.15)',
+              backgroundColor: '#0f172a', cursor: 'pointer'
+            }}>
+              <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem' }}>
+                {editItem.imageUrl ? '✓ Image selected' : 'Choose image...'}
+              </span>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleImageUpload(e, true)}
+                style={{ display: 'none' }}
+              />
+            </label>
+          </div>
+            {editItem.imageUrl && (
+              <img src={editItem.imageUrl} style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: '8px', marginBottom: '1rem' }} />
+            )}
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
               <button className="btn-outline" onClick={() => setEditItem(null)}>Cancel</button>
               <button className="btn-primary" onClick={handleEdit}>Save Changes</button>
