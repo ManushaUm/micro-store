@@ -29,6 +29,8 @@ export const catalogAPI = {
   getProduct: (id) => api.get(`http://localhost:3002/products/${id}`).then(r => r.data),
   seed: () => api.post('http://localhost:3002/products/seed').then(r => r.data),
   addProduct: (data) => api.post('http://localhost:3002/products', data).then(r => r.data),
+  editProduct: (id, data) => api.put(`http://localhost:3002/products/${id}`, data).then(r => r.data),
+  deleteProduct: (id) => api.delete(`http://localhost:3002/products/${id}`).then(r => r.data),
 };
 
 export const cartAPI = {

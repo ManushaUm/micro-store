@@ -53,6 +53,27 @@ app.post('/products', isAdmin, async (req, res) => {
   }
 });
 
+// Edit product (Admin only)
+app.put('/products/:id', isAdmin, async (req, res) => {
+  try {
+    const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!product) return res.status(404).json({ error: 'Not found' });
+    res.json(product);
+  } catch (err) {
+    res.status(500).json({ error: 'Server Error' });
+  }
+});
+
+// Delete product (Admin only)
+app.delete('/products/:id', isAdmin, async (req, res) => {
+  try {
+    await Product.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Product deleted' });
+  } catch (err) {
+    res.status(500).json({ error: 'Server Error' });
+  }
+});
+
 // Update stock (used by checkout process/rabbitmq or direct HTTP)
 app.put('/products/:id/stock', isAdmin, async (req, res) => {
   try {

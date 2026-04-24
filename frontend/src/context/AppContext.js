@@ -55,6 +55,15 @@ export function AppProvider({ children }) {
     setCart({ items: [], total: 0 });
   };
 
+  const refreshProducts = async () => {
+    try {
+      const prods = await catalogAPI.getProducts();
+      setProducts(prods);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const refreshCart = async () => {
     if (!user) return;
     try {
@@ -66,7 +75,7 @@ export function AppProvider({ children }) {
   };
 
   return (
-    <AppContext.Provider value={{ user, login, logout, cart, setCart, refreshCart, products, loading }}>
+    <AppContext.Provider value={{ user, login, logout, cart, setCart, refreshCart, refreshProducts, products, loading }}>
       {children}
     </AppContext.Provider>
   );
