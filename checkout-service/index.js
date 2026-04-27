@@ -170,3 +170,5 @@ const PORT = process.env.PORT || 3004;
 app.listen(PORT, () => {
   console.log(`Checkout Service running on port ${PORT}`);
 });
+
+module.exports = app; // exported for testing

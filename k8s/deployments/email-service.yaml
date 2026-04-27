@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: email-service
+  namespace: micro-store
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: email-service
+  template:
+    metadata:
+      labels:
+        app: email-service
+    spec:
+      imagePullSecrets:
+      - name: docker-hub-secret
+      containers:
+      - name: email-service
+        image: manushau/email-service:latest
+        imagePullPolicy: Always
+        env:
+        - name: RABBITMQ_URL
+          valueFrom:
+            configMapKeyRef:
+              name: micro-store-config
+              key: RABBITMQ_URL
+        - name: SMTP_USER
+          valueFrom:
+            secretKeyRef:
+              name: micro-store-secrets
+              key: SMTP_USER
+        - name: SMTP_PASS
+          valueFrom:
+            secretKeyRef:
+              name: micro-store-secrets
+              key: SMTP_PASS
+        - name: RECEIVER_EMAIL
+          valueFrom:
+            secretKeyRef:
+              name: micro-store-secrets
+              key: RECEIVER_EMAIL

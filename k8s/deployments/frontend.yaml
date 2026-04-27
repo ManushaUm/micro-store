@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: micro-store
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      imagePullSecrets:
+      - name: docker-hub-secret
+      containers:
+      - name: frontend
+        image: manushau/frontend:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000
+        env:
+        - name: NEXT_PUBLIC_API_BASE_URL
+          value: "http://48.206.130.22.nip.io:8080"
+        - name: NEXT_PUBLIC_GOOGLE_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: micro-store-secrets
+              key: GOOGLE_CLIENT_ID
+        - name: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+          value: "pk_test_..."
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: micro-store
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 3000
+  selector:
+    app: frontend

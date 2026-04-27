@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: micro-store-config
+  namespace: micro-store
+data:
+  # Internal service names (DNS within cluster)
+  AUTH_SERVICE_URL: "http://auth-service:3001"
+  CATALOG_SERVICE_URL: "http://catalog-service:3002"
+  CART_SERVICE_URL: "http://cart-service:3003"
+  CHECKOUT_SERVICE_URL: "http://checkout-service:3004"
+  
+  # RabbitMQ URL (using internal cluster name)
+  RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672"
+  
+  # Azure Storage Config
+  AZURE_STORAGE_ACCOUNT_NAME: "microstoreprodimages"
+  AZURE_CONTAINER_NAME: "product-images"
+  
+  # Frontend Config
+  NODE_ENV: "production"

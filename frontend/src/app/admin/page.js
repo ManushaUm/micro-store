@@ -8,10 +8,11 @@ export default function Admin() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [newItem, setNewItem] = useState({ name: '', description: '', price: '', imageUrl: '', stock: '' });
+  const [newItem, setNewItem] = useState({ name: '', description: '', price: '', imageUrl: '', stock: '', imageFile: null });
   const [adding, setAdding] = useState(false);
   const [products, setProducts] = useState([]);
   const [editItem, setEditItem] = useState(null);
+  const [editImageFile, setEditImageFile] = useState(null);
   const [activeTab, setActiveTab] = useState('orders');
 
   useEffect(() => {
@@ -29,12 +30,15 @@ export default function Admin() {
   const handleImageUpload = (e, isEdit = false) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    // Show local preview immediately
     const reader = new FileReader();
     reader.onloadend = () => {
       if (isEdit) {
         setEditItem({ ...editItem, imageUrl: reader.result });
+        setEditImageFile(file);
       } else {
-        setNewItem({ ...newItem, imageUrl: reader.result });
+        setNewItem({ ...newItem, imageUrl: reader.result, imageFile: file });
       }
     };
     reader.readAsDataURL(file);
@@ -61,18 +65,29 @@ export default function Admin() {
   const handleAddItem = async () => {
     setAdding(true);
     try {
+      let finalImageUrl = newItem.imageUrl;
+
+      // 1. If there's a file, upload it to Azure first
+      if (newItem.imageFile) {
+        const uploadRes = await catalogAPI.uploadImage(newItem.imageFile);
+        finalImageUrl = uploadRes.imageUrl;
+      }
+
+      // 2. Add product with the Azure URL
       const added = await catalogAPI.addProduct({
         ...newItem,
+        imageUrl: finalImageUrl,
         price: parseFloat(newItem.price),
         stock: parseInt(newItem.stock),
       });
-      setProducts(prev => [...prev, added]);  // ADD THIS
+      
+      setProducts(prev => [...prev, added]);
       await refreshProducts();
       setShowModal(false);
-      setNewItem({ name: '', description: '', price: '', imageUrl: '', stock: '' });
-      alert('Item added successfully!');
+      setNewItem({ name: '', description: '', price: '', imageUrl: '', stock: '', imageFile: null });
+      alert('Item added successfully with cloud image!');
     } catch (err) {
-      alert('Failed to add item.');
+      alert('Failed to add item: ' + (err.response?.data?.error || err.message));
       console.error(err);
     } finally {
       setAdding(false);
@@ -87,14 +102,33 @@ export default function Admin() {
   };
 
   const handleEdit = async () => {
-    await catalogAPI.editProduct(editItem._id, {
-      ...editItem,
-      price: parseFloat(editItem.price),
-      stock: parseInt(editItem.stock),
-    });
-    setProducts(products.map(p => p._id === editItem._id ? editItem : p));
-    setEditItem(null);
-    await refreshProducts();
+    setAdding(true);
+    try {
+      let finalImageUrl = editItem.imageUrl;
+
+      if (editImageFile) {
+        const uploadRes = await catalogAPI.uploadImage(editImageFile);
+        finalImageUrl = uploadRes.imageUrl;
+      }
+
+      await catalogAPI.editProduct(editItem._id, {
+        ...editItem,
+        imageUrl: finalImageUrl,
+        price: parseFloat(editItem.price),
+        stock: parseInt(editItem.stock),
+      });
+
+      setProducts(products.map(p => p._id === editItem._id ? { ...editItem, imageUrl: finalImageUrl } : p));
+      setEditItem(null);
+      setEditImageFile(null);
+      await refreshProducts();
+      alert('Product updated!');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to update product.');
+    } finally {
+      setAdding(false);
+    }
   };
 
   if (!user || user.role !== 'admin') return <div className="text-center py-8 text-error">Forbidden: Admin only</div>;

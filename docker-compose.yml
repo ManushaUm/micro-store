@@ -33,35 +33,34 @@ services:
       timeout: 5s
       retries: 5
 
-  mongodb:
-    image: mongo:6
-    container_name: mongodb
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodata:/data/db
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   redis:
     image: redis:7
     container_name: redis
-    ports:
-      - "6379:6379"
+    # Port not exposed externally — only accessible within Docker network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
 
+  # ── API Gateway (single external entry point on port 8080) ────────
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - auth-service
+      - catalog-service
+      - cart-service
+      - checkout-service
+    restart: unless-stopped
+
+  # ── Microservices (ports NOT exposed externally, internal only) ───
   auth-service:
     build: ./auth-service
     container_name: auth-service
-    ports:
-      - "3001:3001"
+    # No external port binding — gateway handles routing
     environment:
       - PORT=3001
       - POSTGRES_USER=admin
@@ -70,6 +69,7 @@ services:
       - POSTGRES_HOST=postgres
       - JWT_SECRET=supersecretjwtkey
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - NODE_ENV=development
     depends_on:
       postgres:
         condition: service_healthy
@@ -77,27 +77,28 @@ services:
   catalog-service:
     build: ./catalog-service
     container_name: catalog-service
-    ports:
-      - "3002:3002"
+    # No external port binding — gateway handles routing
     environment:
       - PORT=3002
-      - MONGO_URI=mongodb://mongodb:27017/shopping_site
+      - MONGO_URI=${MONGO_URI}
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - AZURE_STORAGE_ACCOUNT_NAME=${AZURE_STORAGE_ACCOUNT_NAME}
+      - AZURE_STORAGE_ACCOUNT_KEY=${AZURE_STORAGE_ACCOUNT_KEY}
+      - AZURE_CONTAINER_NAME=${AZURE_CONTAINER_NAME}
+      - NODE_ENV=development
     depends_on:
-      mongodb:
-        condition: service_healthy
       rabbitmq:
         condition: service_healthy
 
   cart-service:
     build: ./cart-service
     container_name: cart-service
-    ports:
-      - "3003:3003"
+    # No external port binding — gateway handles routing
     environment:
       - PORT=3003
       - REDIS_URL=redis://redis:6379
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - NODE_ENV=development
     depends_on:
       redis:
         condition: service_healthy
@@ -107,8 +108,7 @@ services:
   checkout-service:
     build: ./checkout-service
     container_name: checkout-service
-    ports:
-      - "3004:3004"
+    # No external port binding — gateway handles routing
     environment:
       - PORT=3004
       - POSTGRES_USER=admin
@@ -117,6 +117,7 @@ services:
       - POSTGRES_HOST=postgres
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
       - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - NODE_ENV=development
     depends_on:
       postgres:
         condition: service_healthy
@@ -131,11 +132,10 @@ services:
     environment:
       - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
       - NEXT_PUBLIC_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
+      - NODE_ENV=development
     depends_on:
-      - auth-service
-      - catalog-service
-      - cart-service
-      - checkout-service
+      - api-gateway
 
   email-service:
     build: ./email-service
@@ -153,4 +153,3 @@ services:
 
 volumes:
   pgdata:
-  mongodata:

@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalog-service
+  namespace: micro-store
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: catalog-service
+  template:
+    metadata:
+      labels:
+        app: catalog-service
+    spec:
+      imagePullSecrets:
+      - name: docker-hub-secret
+      containers:
+      - name: catalog-service
+        image: manushau/catalog-service:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3002
+        env:
+        - name: PORT
+          value: "3002"
+        - name: MONGO_URI
+          valueFrom:
+            secretKeyRef:
+              name: micro-store-secrets
+              key: MONGO_URI
+        - name: RABBITMQ_URL
+          valueFrom:
+            configMapKeyRef:
+              name: micro-store-config
+              key: RABBITMQ_URL
+        - name: AZURE_STORAGE_ACCOUNT_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: micro-store-config
+              key: AZURE_STORAGE_ACCOUNT_NAME
+        - name: AZURE_STORAGE_ACCOUNT_KEY
+          valueFrom:
+            secretKeyRef:
+              name: micro-store-secrets
+              key: AZURE_STORAGE_ACCOUNT_KEY
+        - name: AZURE_CONTAINER_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: micro-store-config
+              key: AZURE_CONTAINER_NAME
+        - name: NODE_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: micro-store-config
+              key: NODE_ENV
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: catalog-service
+  namespace: micro-store
+spec:
+  ports:
+  - port: 3002
+    targetPort: 3002
+  selector:
+    app: catalog-service

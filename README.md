@@ -47,11 +47,13 @@ docker compose up --build
 
 ## Environment variables
 
-Root `.env` is used by Docker Compose. These values are required for Stripe and email delivery. Example:
+Root `.env` is used by Docker Compose. These values are required for Stripe, Google OAuth, and email delivery. Example:
 
 ```dotenv
 STRIPE_SECRET_KEY=sk_test_...
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+
+GOOGLE_CLIENT_ID=your_google_oauth_client_id
 
 SMTP_USER=your_smtp_user
 SMTP_PASS=your_smtp_pass
@@ -68,6 +70,8 @@ Docker Compose also injects these defaults into containers:
 - `REDIS_URL=redis://redis:6379`
 - `RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672`
 - `JWT_SECRET=supersecretjwtkey`
+- `GOOGLE_CLIENT_ID` is used by auth-service
+- `NEXT_PUBLIC_GOOGLE_CLIENT_ID` is injected into the frontend
 - `SMTP_HOST` defaults to `smtp.gmail.com`
 - `SMTP_PORT` defaults to `587`
 
@@ -78,6 +82,7 @@ Docker Compose also injects these defaults into containers:
 - `GET /health`
 - `POST /auth/register` — body: `{ email, password, role? }`
 - `POST /auth/login` — body: `{ email, password }`
+- `POST /auth/google-login` — body: `{ credential }`
 - `GET /auth/verify` — requires `Authorization: Bearer <token>`
 
 ### Catalog Service (http://localhost:3002)
@@ -86,6 +91,8 @@ Docker Compose also injects these defaults into containers:
 - `GET /products`
 - `GET /products/:id`
 - `POST /products` — admin only, requires `x-user-role: admin`
+- `PUT /products/:id` — admin only, requires `x-user-role: admin`
+- `DELETE /products/:id` — admin only, requires `x-user-role: admin`
 - `PUT /products/:id/stock` — admin only, requires `x-user-role: admin`
 - `POST /products/seed` — seed sample products
 
@@ -121,7 +128,7 @@ The frontend uses Axios and injects auth headers for API calls:
 - `Authorization: Bearer <token>`
 - `x-user-id` and `x-user-role` from `localStorage`
 
-API endpoints are hardcoded to `http://localhost:3001-3004` in [frontend/src/lib/api.js](frontend/src/lib/api.js).
+API endpoints are hardcoded to `http://localhost:3001-3004` in [frontend/src/lib/api.js](frontend/src/lib/api.js). Google OAuth uses `NEXT_PUBLIC_GOOGLE_CLIENT_ID` to enable Google Sign-In.
 
 ## Local development (no Docker)
 

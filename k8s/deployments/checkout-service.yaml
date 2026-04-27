@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: checkout-service
+  namespace: micro-store
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: checkout-service
+  template:
+    metadata:
+      labels:
+        app: checkout-service
+    spec:
+      imagePullSecrets:
+      - name: docker-hub-secret
+      containers:
+      - name: checkout-service
+        image: manushau/checkout-service:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3004
+        env:
+        - name: PORT
+          value: "3004"
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: micro-store-secrets
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: micro-store-secrets
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_HOST
+          valueFrom:
+            secretKeyRef:
+              name: micro-store-secrets
+              key: POSTGRES_HOST
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: micro-store-secrets
+              key: POSTGRES_DB
+        - name: RABBITMQ_URL
+          valueFrom:
+            configMapKeyRef:
+              name: micro-store-config
+              key: RABBITMQ_URL
+        - name: STRIPE_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: micro-store-secrets
+              key: STRIPE_SECRET_KEY
+        - name: NODE_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: micro-store-config
+              key: NODE_ENV
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: checkout-service
+  namespace: micro-store
+spec:
+  ports:
+  - port: 3004
+    targetPort: 3004
+  selector:
+    app: checkout-service
