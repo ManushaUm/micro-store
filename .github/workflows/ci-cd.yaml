@@ -80,13 +80,28 @@ jobs:
       - name: Setup Helm
         uses: azure/setup-helm@v3
 
-      - name: Deploy to Staging Namespace
+      - name: Ensure AKS-ACR Link and Secrets
+        run: |
+          # Explicitly attach ACR to AKS (Managed Identity Link)
+          az aks update -n micro-store-aks -g micro-store-rg --attach-acr microstoreacr2026
+
+          # Fallback: Create imagePullSecret using ACR admin credentials
+          ACR_PASSWORD=$(az acr credential show --name microstoreacr2026 --query "passwords[0].value" -o tsv)
+          kubectl create secret docker-registry acr-secret \
+            --namespace staging \
+            --docker-server=microstoreacr2026.azurecr.io \
+            --docker-username=microstoreacr2026 \
+            --docker-password=$ACR_PASSWORD \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Deploy to Staging
         run: |
           helm upgrade --install micro-store ./helm/micro-store \
             --namespace staging \
             --create-namespace \
             --set global.environment=staging \
             --set global.imageRegistry=${{ env.REGISTRY }} \
+            --set global.imagePullSecret=acr-secret \
             --set global.domain=48.216.152.209.nip.io \
             --set services.frontend.env.NEXT_PUBLIC_API_BASE_URL="http://staging.48.216.152.209.nip.io" \
             --set services.api-gateway.tag=${{ github.sha }} \
@@ -118,13 +133,23 @@ jobs:
       - name: Setup Helm
         uses: azure/setup-helm@v3
 
-      - name: Deploy to Production Namespace
+      - name: Deploy to Production
         run: |
+          # Ensure secret exists in production namespace too
+          ACR_PASSWORD=$(az acr credential show --name microstoreacr2026 --query "passwords[0].value" -o tsv)
+          kubectl create secret docker-registry acr-secret \
+            --namespace micro-store \
+            --docker-server=microstoreacr2026.azurecr.io \
+            --docker-username=microstoreacr2026 \
+            --docker-password=$ACR_PASSWORD \
+            --dry-run=client -o yaml | kubectl apply -f -
+
           helm upgrade --install micro-store ./helm/micro-store \
             --namespace micro-store \
             --create-namespace \
             --set global.environment=production \
             --set global.imageRegistry=${{ env.REGISTRY }} \
+            --set global.imagePullSecret=acr-secret \
             --set global.domain=48.216.152.209.nip.io \
             --set services.frontend.env.NEXT_PUBLIC_API_BASE_URL="http://prod.48.216.152.209.nip.io" \
             --set services.api-gateway.tag=${{ github.sha }} \
