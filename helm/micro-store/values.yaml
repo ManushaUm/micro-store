@@ -1,34 +1,44 @@
 # Default values for micro-store.
 
-global:
-  environment: "production"
-  imageRegistry: "microstoreacr2026.azurecr.io"
-  imagePullSecret: "acr-secret"
-  domain: "52.224.151.13.nip.io"
-  apiDomain: "48.206.130.22.nip.io"
-
 common:
-  imagePullPolicy: Always
   replicaCount: 1
+  imagePullPolicy: Always
+  serviceType: ClusterIP
+
+global:
+  imageRegistry: "microstoreacr2026.azurecr.io"
+  imagePullSecret: ""
+  environment: "production"
+  domain: "48.216.152.209.nip.io"
+
+ingress:
+  enabled: true
+  className: "nginx"
+  # The IP will be assigned to the Ingress Controller LoadBalancer
+  # We will use nip.io to create hostnames like:
+  # staging-micro-store.IP.nip.io
+  # prod-micro-store.IP.nip.io
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
 
 services:
   frontend:
     enabled: true
-    image: "manushau/frontend" # We will change this to ACR later
+    image: "manushau/frontend"
     tag: "latest"
     containerPort: 3000
-    serviceType: LoadBalancer
     servicePort: 3000
     healthCheck: "/"
     env:
-      NEXT_PUBLIC_API_BASE_URL: "http://48.206.130.22.nip.io:8080"
+      # This will be overridden by the Ingress hostname
+      NEXT_PUBLIC_API_BASE_URL: "http://48.216.152.209.nip.io"
       
   api-gateway:
     enabled: true
     image: "manushau/api-gateway"
     tag: "latest"
     containerPort: 8080
-    serviceType: LoadBalancer
     servicePort: 8080
     healthCheck: "/gateway/health"
 
