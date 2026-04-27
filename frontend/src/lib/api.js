@@ -11,7 +11,16 @@ import axios from 'axios';
  *   .env.staging     → NEXT_PUBLIC_API_BASE_URL=*
  *   .env.production  → NEXT_PUBLIC_API_BASE_URL=http://48.206.130.22.nip.io:8080
  */
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || (typeof window === 'undefined' ? 'http://api-gateway:8080' : '');
+const getBaseUrl = () => {
+  // Client-side: Use relative URL to stay on the same host (nip.io)
+  if (typeof window !== 'undefined') {
+    return ''; 
+  }
+  // Server-side (SSR): Use the internal Kubernetes service name
+  return process.env.NEXT_PUBLIC_API_BASE_URL || 'http://api-gateway:8080';
+};
+
+const API_BASE_URL = getBaseUrl();
 
 const api = axios.create({
   baseURL: API_BASE_URL,
