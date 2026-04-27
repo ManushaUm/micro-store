@@ -57,7 +57,7 @@ GOOGLE_CLIENT_ID=your_google_oauth_client_id
 
 SMTP_USER=your_smtp_user
 SMTP_PASS=your_smtp_pass
-RECEIVER_EMAIL=you@example.com
+RECEIVER_EMAIL=developer@shopswift.dev
 ```
 
 Docker Compose also injects these defaults into containers:

@@ -12,7 +12,7 @@ import {
 } from "@stripe/react-stripe-js";
 import { MapPin, CreditCard, Truck, CheckCircle, ArrowLeft, Lock, Edit3, Save, X, ShoppingBag } from "lucide-react";
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "pk_test_placeholder");
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "pk_test_missing_key");
 
 function CheckoutForm() {
   const { cart, refreshCart, user } = useAppContext();
@@ -147,11 +147,11 @@ function CheckoutForm() {
       </button>
 
       <div className="checkout-grid">
-        {/* ── LEFT: Form ── */}
+        {/* LEFT: Form */}
         <div className="checkout-main">
           <form onSubmit={handleSubmit} className="glass-card">
 
-            {/* ── Shipping Details ── */}
+            {/* Shipping Details */}
             <section className="checkout-section">
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
                 <h2 className="section-title" style={{ margin: 0 }}>
@@ -210,27 +210,27 @@ function CheckoutForm() {
                   <div className="form-group full-width">
                     <label>Full Name</label>
                     <input type="text" name="fullName" required
-                      value={delivery.fullName} onChange={handleChange} placeholder="John Doe" />
+                      value={delivery.fullName} onChange={handleChange} placeholder="Jane Smith" />
                   </div>
                   <div className="form-group full-width">
                     <label>Address</label>
                     <input type="text" name="address" required
-                      value={delivery.address} onChange={handleChange} placeholder="123 Street Name" />
+                      value={delivery.address} onChange={handleChange} placeholder="456 Innovation Way" />
                   </div>
                   <div className="form-group">
                     <label>City</label>
                     <input type="text" name="city" required
-                      value={delivery.city} onChange={handleChange} placeholder="New York" />
+                      value={delivery.city} onChange={handleChange} placeholder="San Francisco" />
                   </div>
                   <div className="form-group">
                     <label>Zip Code</label>
                     <input type="text" name="zipCode" required
-                      value={delivery.zipCode} onChange={handleChange} placeholder="10001" />
+                      value={delivery.zipCode} onChange={handleChange} placeholder="94105" />
                   </div>
                   <div className="form-group full-width">
                     <label>Phone Number</label>
                     <input type="tel" name="phone" required
-                      value={delivery.phone} onChange={handleChange} placeholder="+1 234 567 890" />
+                      value={delivery.phone} onChange={handleChange} placeholder="+1 (555) 123-4567" />
                   </div>
                 </div>
               )}
@@ -247,7 +247,7 @@ function CheckoutForm() {
               )}
             </section>
 
-            {/* ── Payment Method ── */}
+            {/* Payment Method */}
             <section className="checkout-section" style={{ marginTop: "2rem" }}>
               <h2 className="section-title">
                 <CreditCard size={20} /> Payment Method
@@ -299,7 +299,7 @@ function CheckoutForm() {
           </form>
         </div>
 
-        {/* ── RIGHT: Order Summary ── */}
+        {/* RIGHT: Order Summary */}
         <div className="checkout-sidebar">
           <div className="glass-card sticky-sidebar">
             <h2 className="summary-title">

@@ -54,7 +54,7 @@ const channelWrapper = connection.createChannel({
 });
 
 async function sendEmail(orderData) {
-  const receiver = orderData.email || process.env.RECEIVER_EMAIL || "customer@example.com";
+  const receiver = orderData.email || process.env.RECEIVER_EMAIL || "customer@shopswift.dev";
   console.log('Attempting to send email to:', receiver);
 
   if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
