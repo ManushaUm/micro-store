@@ -23,10 +23,6 @@ spec:
       labels:
         app: {{ $name }}
     spec:
-      {{- if $.Values.global.imagePullSecret }}
-      imagePullSecrets:
-      - name: {{ $.Values.global.imagePullSecret }}
-      {{- end }}
       containers:
       - name: {{ $name }}
         image: "{{ $.Values.global.imageRegistry }}/{{ $service.image }}:{{ $service.tag }}"

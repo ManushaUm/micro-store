@@ -59,8 +59,9 @@ We employ a strict GitOps methodology powered by **GitHub Actions** (`.github/wo
 
 The application is currently live on AKS across two environments.
 
-- **Production Storefront**: [http://52.224.151.13.nip.io](http://52.224.151.13.nip.io)
-- **Production API Gateway**: `http://48.206.yyy.xx.nip.io:8080`
+- **Production Storefront**: [http://prod.48.216.152.209.nip.io](http://prod.48.216.152.209.nip.io)
+- **Staging Storefront**: [http://staging.48.216.152.209.nip.io](http://staging.48.216.152.209.nip.io)
+- **API Gateway**: Handled automatically via host-based routing (no separate IP needed).
 
 ---
 
