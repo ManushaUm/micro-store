@@ -34,6 +34,7 @@ services:
     env:
       # This will be overridden by the Ingress hostname
       NEXT_PUBLIC_API_BASE_URL: "http://48.216.152.209.nip.io"
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: "pk_test_51TPFxMK7EULgYmVsENzQ7YZxRIgKoQU36REWM4KouIkJypxtH23f1P3fq1ygduQRDuWjcFIHJMr9J5JOdiT1WLmN00cMFjyCpM"
       
   api-gateway:
     enabled: true
