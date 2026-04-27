@@ -1,39 +1,52 @@
 # Default values for micro-store.
 
-global:
-  environment: "production"
-  imageRegistry: "microstoreacr2026.azurecr.io"
-  imagePullSecret: "acr-secret"
-  domain: "52.224.151.13.nip.io"
-  apiDomain: "48.206.130.22.nip.io"
-
 common:
-  imagePullPolicy: Always
   replicaCount: 1
+  imagePullPolicy: Always
+  serviceType: ClusterIP
+
+global:
+  imageRegistry: "microstoreacr2026.azurecr.io"
+  imagePullSecret: ""
+  environment: "production"
+  domain: "48.216.152.209.nip.io"
+
+ingress:
+  enabled: true
+  className: "nginx"
+  # The IP will be assigned to the Ingress Controller LoadBalancer
+  # We will use nip.io to create hostnames like:
+  # staging-micro-store.IP.nip.io
+  # prod-micro-store.IP.nip.io
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
 
 services:
   frontend:
     enabled: true
-    image: "manushau/frontend" # We will change this to ACR later
+    useRegistry: true
+    image: "manushau/frontend"
     tag: "latest"
     containerPort: 3000
-    serviceType: LoadBalancer
     servicePort: 3000
     healthCheck: "/"
     env:
-      NEXT_PUBLIC_API_BASE_URL: "http://48.206.130.22.nip.io:8080"
+      # This will be overridden by the Ingress hostname
+      NEXT_PUBLIC_API_BASE_URL: "http://48.216.152.209.nip.io"
       
   api-gateway:
     enabled: true
+    useRegistry: true
     image: "manushau/api-gateway"
     tag: "latest"
     containerPort: 8080
-    serviceType: LoadBalancer
     servicePort: 8080
     healthCheck: "/gateway/health"
 
   auth-service:
     enabled: true
+    useRegistry: true
     image: "manushau/auth-service"
     tag: "latest"
     containerPort: 3001
@@ -44,6 +57,7 @@ services:
 
   catalog-service:
     enabled: true
+    useRegistry: true
     image: "manushau/catalog-service"
     tag: "latest"
     containerPort: 3002
@@ -54,6 +68,7 @@ services:
 
   cart-service:
     enabled: true
+    useRegistry: true
     image: "manushau/cart-service"
     tag: "latest"
     containerPort: 3003
@@ -64,6 +79,7 @@ services:
 
   checkout-service:
     enabled: true
+    useRegistry: true
     image: "manushau/checkout-service"
     tag: "latest"
     containerPort: 3004
@@ -74,14 +90,17 @@ services:
 
   email-service:
     enabled: true
+    useRegistry: true
     image: "manushau/email-service"
     tag: "latest"
     containerPort: 80
     serviceType: ClusterIP
     servicePort: 80
+    healthCheckEnabled: false
 
   postgres:
     enabled: true
+    useRegistry: false
     image: "postgres"
     tag: "15-alpine"
     containerPort: 5432
@@ -93,6 +112,7 @@ services:
 
   rabbitmq:
     enabled: true
+    useRegistry: false
     image: "rabbitmq"
     tag: "3-management"
     containerPort: 5672

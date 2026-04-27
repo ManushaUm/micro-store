@@ -48,7 +48,6 @@ jobs:
           # Use build args for frontend
           if [ "${{ matrix.service }}" == "frontend" ]; then
             docker build \
-              --build-arg NEXT_PUBLIC_API_BASE_URL="http://48.206.130.22.nip.io:8080" \
               --build-arg NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
               -t $IMAGE_NAME:${{ github.sha }} \
               -t $IMAGE_NAME:latest \
@@ -81,14 +80,27 @@ jobs:
       - name: Setup Helm
         uses: azure/setup-helm@v3
 
-      - name: Deploy to Staging Namespace
+      - name: Ensure Image Pull Secret
+        run: |
+          # Create imagePullSecret using ACR admin credentials (requires only Contributor/Reader access)
+          ACR_PASSWORD=$(az acr credential show --name microstoreacr2026 --query "passwords[0].value" -o tsv)
+          kubectl create secret docker-registry acr-secret \
+            --namespace staging \
+            --docker-server=microstoreacr2026.azurecr.io \
+            --docker-username=microstoreacr2026 \
+            --docker-password=$ACR_PASSWORD \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Deploy to Staging
         run: |
           helm upgrade --install micro-store ./helm/micro-store \
             --namespace staging \
             --create-namespace \
             --set global.environment=staging \
             --set global.imageRegistry=${{ env.REGISTRY }} \
-            --set services.api-gateway.image=manushau/api-gateway \
+            --set global.imagePullSecret=acr-secret \
+            --set global.domain=48.216.152.209.nip.io \
+            --set services.frontend.env.NEXT_PUBLIC_API_BASE_URL="http://staging.48.216.152.209.nip.io" \
             --set services.api-gateway.tag=${{ github.sha }} \
             --set services.auth-service.tag=${{ github.sha }} \
             --set services.cart-service.tag=${{ github.sha }} \
@@ -118,13 +130,25 @@ jobs:
       - name: Setup Helm
         uses: azure/setup-helm@v3
 
-      - name: Deploy to Production Namespace
+      - name: Deploy to Production
         run: |
+          # Ensure secret exists in production namespace too
+          ACR_PASSWORD=$(az acr credential show --name microstoreacr2026 --query "passwords[0].value" -o tsv)
+          kubectl create secret docker-registry acr-secret \
+            --namespace micro-store \
+            --docker-server=microstoreacr2026.azurecr.io \
+            --docker-username=microstoreacr2026 \
+            --docker-password=$ACR_PASSWORD \
+            --dry-run=client -o yaml | kubectl apply -f -
+
           helm upgrade --install micro-store ./helm/micro-store \
             --namespace micro-store \
             --create-namespace \
             --set global.environment=production \
             --set global.imageRegistry=${{ env.REGISTRY }} \
+            --set global.imagePullSecret=acr-secret \
+            --set global.domain=48.216.152.209.nip.io \
+            --set services.frontend.env.NEXT_PUBLIC_API_BASE_URL="http://prod.48.216.152.209.nip.io" \
             --set services.api-gateway.tag=${{ github.sha }} \
             --set services.auth-service.tag=${{ github.sha }} \
             --set services.cart-service.tag=${{ github.sha }} \

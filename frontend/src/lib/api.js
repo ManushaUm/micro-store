@@ -11,7 +11,7 @@ import axios from 'axios';
  *   .env.staging     → NEXT_PUBLIC_API_BASE_URL=*
  *   .env.production  → NEXT_PUBLIC_API_BASE_URL=http://48.206.130.22.nip.io:8080
  */
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || (typeof window === 'undefined' ? 'http://api-gateway:8080' : '');
 
 const api = axios.create({
   baseURL: API_BASE_URL,
