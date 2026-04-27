@@ -1,0 +1,134 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ${{ secrets.ACR_LOGIN_SERVER }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [auth-service, cart-service, catalog-service, checkout-service]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install dependencies and Test
+        run: |
+          cd ${{ matrix.service }}
+          npm install
+          npm test
+
+  build-and-push:
+    needs: test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [api-gateway, auth-service, cart-service, catalog-service, checkout-service, email-service, frontend]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          
+      - name: Build and Push to ACR
+        run: |
+          az acr login --name ${{ secrets.ACR_NAME }}
+          IMAGE_NAME=${{ env.REGISTRY }}/manushau/${{ matrix.service }}
+          
+          # Use build args for frontend
+          if [ "${{ matrix.service }}" == "frontend" ]; then
+            docker build \
+              --build-arg NEXT_PUBLIC_API_BASE_URL="http://48.206.130.22.nip.io:8080" \
+              --build-arg NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+              -t $IMAGE_NAME:${{ github.sha }} \
+              -t $IMAGE_NAME:latest \
+              ./${{ matrix.service }}
+          else
+            docker build -t $IMAGE_NAME:${{ github.sha }} -t $IMAGE_NAME:latest ./${{ matrix.service }}
+          fi
+          
+          docker push $IMAGE_NAME:${{ github.sha }}
+          docker push $IMAGE_NAME:latest
+
+  deploy-staging:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          
+      - name: Set AKS Context
+        uses: azure/aks-set-context@v3
+        with:
+          cluster-name: micro-store-aks
+          resource-group: micro-store-rg
+          
+      - name: Setup Helm
+        uses: azure/setup-helm@v3
+
+      - name: Deploy to Staging Namespace
+        run: |
+          helm upgrade --install micro-store ./helm/micro-store \
+            --namespace staging \
+            --create-namespace \
+            --set global.environment=staging \
+            --set global.imageRegistry=${{ env.REGISTRY }} \
+            --set services.api-gateway.image=manushau/api-gateway \
+            --set services.api-gateway.tag=${{ github.sha }} \
+            --set services.auth-service.tag=${{ github.sha }} \
+            --set services.cart-service.tag=${{ github.sha }} \
+            --set services.catalog-service.tag=${{ github.sha }} \
+            --set services.checkout-service.tag=${{ github.sha }} \
+            --set services.email-service.tag=${{ github.sha }} \
+            --set services.frontend.tag=${{ github.sha }}
+
+  deploy-production:
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    environment: production  # This triggers the manual approval in GitHub (if configured)
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          
+      - name: Set AKS Context
+        uses: azure/aks-set-context@v3
+        with:
+          cluster-name: micro-store-aks
+          resource-group: micro-store-rg
+          
+      - name: Setup Helm
+        uses: azure/setup-helm@v3
+
+      - name: Deploy to Production Namespace
+        run: |
+          helm upgrade --install micro-store ./helm/micro-store \
+            --namespace micro-store \
+            --create-namespace \
+            --set global.environment=production \
+            --set global.imageRegistry=${{ env.REGISTRY }} \
+            --set services.api-gateway.tag=${{ github.sha }} \
+            --set services.auth-service.tag=${{ github.sha }} \
+            --set services.cart-service.tag=${{ github.sha }} \
+            --set services.catalog-service.tag=${{ github.sha }} \
+            --set services.checkout-service.tag=${{ github.sha }} \
+            --set services.email-service.tag=${{ github.sha }} \
+            --set services.frontend.tag=${{ github.sha }}

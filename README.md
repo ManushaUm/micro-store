@@ -1,187 +1,132 @@
-# Microservices Demo (ShopSwift)
+# Micro Shop - Enterprise Cloud Architecture 🚀
 
-A full-stack microservices e-commerce demo built with Node.js services, a Next.js frontend, and a message-driven workflow via RabbitMQ. It includes authentication, product catalog, cart, checkout/orders, and email notifications.
+[![Build Status](https://github.com/ManushaUm/micro-store/actions/workflows/ci-cd.yaml/badge.svg)](https://github.com/ManushaUm/micro-store/actions/workflows/ci-cd.yaml)
+![Architecture Diagram](https://img.shields.io/badge/Architecture-Microservices-blue)
+![Platform](https://img.shields.io/badge/Platform-Azure_AKS-0078D4)
+![IAC](https://img.shields.io/badge/IAC-Terraform-623CE4)
+![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub_Actions-2088FF)
+![Deployment](https://img.shields.io/badge/Deployment-Helm-0F1689)
+![Frontend](https://img.shields.io/badge/Frontend-Next.js_15-black)
 
-## Architecture overview
+A modern, full-stack microservices e-commerce platform designed for high availability, zero-downtime deployments, and cloud-native scalability. 
 
-Services communicate over HTTP and publish order events to RabbitMQ for async processing (catalog stock updates, cart clearing, and email notifications).
+## 📑 Table of Contents
+- [Cloud Architecture](#-cloud-architecture)
+- [CI/CD & DevOps Pipeline](#-cicd--devops-pipeline)
+- [Live Access](#-live-access-current-deployment)
+- [Infrastructure as Code (Terraform)](#-infrastructure-as-code)
+- [Helm & Kubernetes Deployment](#-helm--kubernetes-deployment)
+- [Local Development](#-local-development-docker-compose)
+- [Documentation Directory](#-documentation-directory)
 
-- **Frontend** (Next.js app router)
-- **Auth Service** (Postgres)
-- **Catalog Service** (MongoDB)
-- **Cart Service** (Redis)
-- **Checkout Service** (Postgres + Stripe)
-- **Email Service** (SMTP + RabbitMQ)
-- **RabbitMQ** (event bus)
-- **Postgres / MongoDB / Redis** (datastores)
+---
 
-## Quick start (Docker Compose)
+## 🏗️ Cloud Architecture
 
-1. Create or update the root `.env` file (see [Environment variables](#environment-variables)).
-2. Build and start everything:
+This application utilizes a robust Azure-native ecosystem combined with open-source container orchestration.
 
-```bash
-docker compose up --build
-```
+### Infrastructure (Azure)
+- **AKS Cluster**: Managed Kubernetes cluster (`Standard_DC2s_v3`) in `eastus`.
+- **Azure Container Registry (ACR)**: Secure, private Docker registry for hosting all microservice images.
+- **Azure Cache for Redis**: High-performance managed cache for real-time Cart management.
+- **Azure Blob Storage**: Scalable object storage for product image hosting.
+- **Monitoring**: Azure Monitor for Containers (Prometheus & Grafana integrated).
 
-3. Open the app:
+### Microservices
+- **Frontend** (Next.js 15): SSR/Client app exposed via Public Load Balancer.
+- **API Gateway** (Nginx): Central entry point for all API traffic, handling routing and CORS.
+- **Auth Service** (Postgres): JWT-based authentication and Google OAuth 2.0 integration.
+- **Catalog Service** (MongoDB): Manages products, categories, and inventory.
+- **Cart Service** (Redis): Low-latency shopping cart state management.
+- **Checkout Service** (Postgres + Stripe): Handles secure payments and order processing.
+- **Email Service** (SMTP + RabbitMQ): Async order confirmations triggered via event bus.
 
-- Frontend: http://localhost:3000
-- RabbitMQ UI: http://localhost:15672 (guest/guest)
+---
 
-## Services and ports
+## 🔄 CI/CD & DevOps Pipeline
 
-| Service          |  Port | Purpose              |
-| ---------------- | ----: | -------------------- |
-| frontend         |  3000 | Next.js UI           |
-| auth-service     |  3001 | User auth + JWT      |
-| catalog-service  |  3002 | Products catalog     |
-| cart-service     |  3003 | Cart state           |
-| checkout-service |  3004 | Orders + payments    |
-| email-service    |   n/a | Order email consumer |
-| rabbitmq         |  5672 | AMQP                 |
-| rabbitmq-ui      | 15672 | Management UI        |
-| postgres         |  5432 | Auth + Orders DB     |
-| mongodb          | 27017 | Catalog DB           |
-| redis            |  6379 | Cart cache           |
+We employ a strict GitOps methodology powered by **GitHub Actions** (`.github/workflows/ci-cd.yaml`).
 
-## Environment variables
+1. **Automated Testing**: Every push triggers `npm test` across all Node.js microservices (Jest).
+2. **ACR Build & Push**: Docker images are built and pushed to Azure Container Registry using the Git commit hash as the tag.
+3. **Staging Rollout**: Images are automatically deployed to the `staging` namespace in AKS using Helm.
+4. **Production Rollout**: Upon staging verification, Helm upgrades the `micro-store` production namespace.
+5. **Zero-Downtime**: Our dynamic Helm templates enforce `RollingUpdate` strategies with strict `readinessProbes` and `livenessProbes`.
 
-Root `.env` is used by Docker Compose. These values are required for Stripe, Google OAuth, and email delivery. Example:
+---
 
-```dotenv
-STRIPE_SECRET_KEY=sk_test_...
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+## 🚀 Live Access (Current Deployment)
 
-GOOGLE_CLIENT_ID=your_google_oauth_client_id
+The application is currently live on AKS across two environments.
 
-SMTP_USER=your_smtp_user
-SMTP_PASS=your_smtp_pass
-RECEIVER_EMAIL=developer@shopswift.dev
-```
+- **Production Storefront**: [http://52.224.151.13.nip.io](http://52.224.151.13.nip.io)
+- **Production API Gateway**: `http://48.206.yyy.xx.nip.io:8080`
 
-Docker Compose also injects these defaults into containers:
+---
 
-- `POSTGRES_USER=admin`
-- `POSTGRES_PASSWORD=password`
-- `POSTGRES_DB=shopping_site`
-- `POSTGRES_HOST=postgres`
-- `MONGO_URI=mongodb://mongodb:27017/shopping_site`
-- `REDIS_URL=redis://redis:6379`
-- `RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672`
-- `JWT_SECRET=supersecretjwtkey`
-- `GOOGLE_CLIENT_ID` is used by auth-service
-- `NEXT_PUBLIC_GOOGLE_CLIENT_ID` is injected into the frontend
-- `SMTP_HOST` defaults to `smtp.gmail.com`
-- `SMTP_PORT` defaults to `587`
+## 🛠️ Infrastructure as Code
 
-## Service APIs
+The entire cloud environment is provisioned using **Terraform**.
 
-### Auth Service (http://localhost:3001)
+### Setup Instructions
+1. Navigate to the terraform directory:
+   ```bash
+   cd terraform
+   ```
+2. Initialize and apply:
+   ```bash
+   terraform init
+   terraform apply -var-file="terraform.tfvars"
+   ```
+3. Retrieve the kubeconfig to manage the cluster:
+   ```bash
+   $env:KUBECONFIG=(Resolve-Path .\aks_kubeconfig.yaml).Path
+   ```
 
-- `GET /health`
-- `POST /auth/register` — body: `{ email, password, role? }`
-- `POST /auth/login` — body: `{ email, password }`
-- `POST /auth/google-login` — body: `{ credential }`
-- `GET /auth/verify` — requires `Authorization: Bearer <token>`
+---
 
-### Catalog Service (http://localhost:3002)
+## ☸️ Helm & Kubernetes Deployment
 
-- `GET /health`
-- `GET /products`
-- `GET /products/:id`
-- `POST /products` — admin only, requires `x-user-role: admin`
-- `PUT /products/:id` — admin only, requires `x-user-role: admin`
-- `DELETE /products/:id` — admin only, requires `x-user-role: admin`
-- `PUT /products/:id/stock` — admin only, requires `x-user-role: admin`
-- `POST /products/seed` — seed sample products
+We manage all Kubernetes resources dynamically via Helm. Static manifests (`/k8s`) are deprecated in favor of our centralized chart.
 
-### Cart Service (http://localhost:3003)
+### Deploying Locally/Manually
+1. Setup Secrets (Use the template provided):
+   ```bash
+   cp k8s/secrets.example.yaml k8s/secrets.yaml
+   # Edit secrets.yaml with your actual keys
+   kubectl apply -f k8s/secrets.yaml -n micro-store
+   ```
+2. Install via Helm:
+   ```bash
+   helm upgrade --install micro-store ./helm/micro-store \
+     --namespace micro-store \
+     --create-namespace \
+     --set global.environment=production
+   ```
 
-All cart endpoints require `x-user-id` header.
+---
 
-- `GET /health`
-- `GET /cart`
-- `POST /cart/items` — body: `{ productId, name, price, quantity, imageUrl }`
-- `DELETE /cart/items/:productId`
-- `DELETE /cart` — clear cart
+## 🧪 Local Development (Docker Compose)
 
-### Checkout Service (http://localhost:3004)
+For quick local testing without Azure:
 
-User routes require `x-user-id` header. Admin routes require `x-user-role: admin`.
+1. Populate the root `.env` file using `.env.example` as a reference.
+2. Spin up the stack:
+   ```bash
+   docker compose up --build
+   ```
+3. Access services:
+   - Frontend: `http://localhost:3000`
+   - Gateway: `http://localhost:8080`
+   - RabbitMQ UI: `http://localhost:15672` (guest/guest)
 
-- `GET /health`
-- `POST /checkout` — body: `{ items, total, deliveryDetails, paymentMethod, email }`
-- `GET /orders` — user orders
-- `PUT /orders/:id/cancel`
-- `GET /admin/orders` — admin only
-- `PUT /admin/orders/:id/status` — body: `{ status }`
+---
 
-### Email Service
+## 📚 Documentation Directory
 
-Consumes RabbitMQ events from `shopping_exchange` with routing key `order.placed` and sends email via SMTP. If SMTP credentials are missing, it falls back to a simulation log.
+For deeper technical insights, please review the following documents:
+- [ARCHITECTURE.md](./ARCHITECTURE.md): Deep dive into data flow, event-driven architecture, and database schemas.
+- [CONTRIBUTING.md](./CONTRIBUTING.md): Guidelines for branching, testing, and triggering CI/CD.
 
-## Frontend notes
-
-The frontend uses Axios and injects auth headers for API calls:
-
-- `Authorization: Bearer <token>`
-- `x-user-id` and `x-user-role` from `localStorage`
-
-API endpoints are hardcoded to `http://localhost:3001-3004` in [frontend/src/lib/api.js](frontend/src/lib/api.js). Google OAuth uses `NEXT_PUBLIC_GOOGLE_CLIENT_ID` to enable Google Sign-In.
-
-## Local development (no Docker)
-
-You can run services locally, but you must provide your own Postgres, MongoDB, Redis, and RabbitMQ instances.
-
-### Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-### Backend services
-
-Each service is a simple Express app with a `Dockerfile` and `index.js`. For local dev:
-
-```bash
-cd auth-service
-npm install
-node index.js
-```
-
-Repeat for `catalog-service`, `cart-service`, `checkout-service`, and `email-service`.
-
-## Data initialization
-
-- Auth Service creates the `users` table on startup.
-- Checkout Service creates the `orders` table on startup.
-- Catalog Service can seed products via `POST /products/seed`.
-
-## Event flow
-
-1. Checkout creates an order and publishes `order.placed`.
-2. Catalog Service reduces product stock.
-3. Cart Service clears the user cart.
-4. Email Service sends an order confirmation.
-
-## Troubleshooting
-
-- **Stripe errors**: ensure `STRIPE_SECRET_KEY` is set. If not, the checkout service will warn and Stripe payments will fail.
-- **Email not sending**: set `SMTP_USER` and `SMTP_PASS`. Without them, email is simulated.
-- **Auth headers missing**: cart and checkout routes require `x-user-id`.
-
-## Project structure
-
-```
-.
-├── auth-service/
-├── cart-service/
-├── catalog-service/
-├── checkout-service/
-├── email-service/
-├── frontend/
-└── docker-compose.yml
-```
+---
+*Maintained by the Cloud Engineering Team*

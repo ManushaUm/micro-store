@@ -1,0 +1,101 @@
+# Default values for micro-store.
+
+global:
+  environment: "production"
+  imageRegistry: "microstoreacr2026.azurecr.io"
+  imagePullSecret: "acr-secret"
+  domain: "52.224.151.13.nip.io"
+  apiDomain: "48.206.130.22.nip.io"
+
+common:
+  imagePullPolicy: Always
+  replicaCount: 1
+
+services:
+  frontend:
+    enabled: true
+    image: "manushau/frontend" # We will change this to ACR later
+    tag: "latest"
+    containerPort: 3000
+    serviceType: LoadBalancer
+    servicePort: 3000
+    healthCheck: "/"
+    env:
+      NEXT_PUBLIC_API_BASE_URL: "http://48.206.130.22.nip.io:8080"
+      
+  api-gateway:
+    enabled: true
+    image: "manushau/api-gateway"
+    tag: "latest"
+    containerPort: 8080
+    serviceType: LoadBalancer
+    servicePort: 8080
+    healthCheck: "/gateway/health"
+
+  auth-service:
+    enabled: true
+    image: "manushau/auth-service"
+    tag: "latest"
+    containerPort: 3001
+    serviceType: ClusterIP
+    servicePort: 3001
+    env:
+      PORT: "3001"
+
+  catalog-service:
+    enabled: true
+    image: "manushau/catalog-service"
+    tag: "latest"
+    containerPort: 3002
+    serviceType: ClusterIP
+    servicePort: 3002
+    env:
+      PORT: "3002"
+
+  cart-service:
+    enabled: true
+    image: "manushau/cart-service"
+    tag: "latest"
+    containerPort: 3003
+    serviceType: ClusterIP
+    servicePort: 3003
+    env:
+      PORT: "3003"
+
+  checkout-service:
+    enabled: true
+    image: "manushau/checkout-service"
+    tag: "latest"
+    containerPort: 3004
+    serviceType: ClusterIP
+    servicePort: 3004
+    env:
+      PORT: "3004"
+
+  email-service:
+    enabled: true
+    image: "manushau/email-service"
+    tag: "latest"
+    containerPort: 80
+    serviceType: ClusterIP
+    servicePort: 80
+
+  postgres:
+    enabled: true
+    image: "postgres"
+    tag: "15-alpine"
+    containerPort: 5432
+    serviceType: ClusterIP
+    servicePort: 5432
+    healthCheckEnabled: false
+    env:
+      POSTGRES_USER: "adminuser"
+
+  rabbitmq:
+    enabled: true
+    image: "rabbitmq"
+    tag: "3-management"
+    containerPort: 5672
+    serviceType: ClusterIP
+    servicePort: 5672
+    healthCheckEnabled: false
