@@ -16,7 +16,7 @@ spec:
     http:
       paths:
       # API Gateway Routes (prefixed with /api)
-      - path: /api/(auth/.*|products/.*|cart/.*|checkout/.*|orders/.*|admin/.*|health/.*|gateway/.*)
+      - path: /api/(auth|products|cart|checkout|orders|admin|health|gateway)(/.*|$)
         pathType: Prefix
         backend:
           service:
