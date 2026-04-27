@@ -96,6 +96,7 @@ services:
     containerPort: 80
     serviceType: ClusterIP
     servicePort: 80
+    healthCheckEnabled: false
 
   postgres:
     enabled: true
