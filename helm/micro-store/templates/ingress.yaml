@@ -4,77 +4,31 @@ kind: Ingress
 metadata:
   name: {{ .Release.Name }}-ingress
   namespace: {{ .Release.Namespace }}
-  annotations:
-    {{- toYaml .Values.ingress.annotations | nindent 4 }}
-spec:
-  ingressClassName: {{ .Values.ingress.className }}
-  rules:
-  - host: {{ if eq .Release.Namespace "staging" }}staging.{{ else }}prod.{{ end }}{{ .Values.global.domain }}
-    http:
-      paths:
-      # API Gateway Routes
-      - path: /gateway/health
-        pathType: Prefix
-        backend:
-          service:
-            name: api-gateway
-            port:
-              number: {{ (index .Values.services "api-gateway").servicePort }}
-      - path: /auth
-        pathType: Prefix
-        backend:
-          service:
-            name: api-gateway
-            port:
-              number: {{ (index .Values.services "api-gateway").servicePort }}
-      - path: /products
-        pathType: Prefix
-        backend:
-          service:
-            name: api-gateway
-            port:
-              number: {{ (index .Values.services "api-gateway").servicePort }}
-      - path: /cart
-        pathType: Prefix
-        backend:
-          service:
-            name: api-gateway
-            port:
-              number: {{ (index .Values.services "api-gateway").servicePort }}
-      - path: /checkout
-        pathType: Prefix
-        backend:
-          service:
-            name: api-gateway
-            port:
-              number: {{ (index .Values.services "api-gateway").servicePort }}
-      - path: /orders
-        pathType: Prefix
-        backend:
-          service:
-            name: api-gateway
-            port:
-              number: {{ (index .Values.services "api-gateway").servicePort }}
-      - path: /admin
-        pathType: Prefix
-        backend:
-          service:
-            name: api-gateway
-            port:
-              number: {{ (index .Values.services "api-gateway").servicePort }}
-      - path: /health
-        pathType: Prefix
-        backend:
-          service:
-            name: api-gateway
-            port:
-              number: {{ (index .Values.services "api-gateway").servicePort }}
-      # Frontend (Catch-all)
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: frontend
-            port:
-              number: {{ .Values.services.frontend.servicePort }}
+    annotations:
+      nginx.ingress.kubernetes.io/ssl-redirect: "false"
+      nginx.ingress.kubernetes.io/use-regex: "true"
+      nginx.ingress.kubernetes.io/rewrite-target: /$1
+      {{- toYaml .Values.ingress.annotations | nindent 4 }}
+  spec:
+    ingressClassName: {{ .Values.ingress.className }}
+    rules:
+    - host: {{ if eq .Release.Namespace "staging" }}staging.{{ else }}prod.{{ end }}{{ .Values.global.domain }}
+      http:
+        paths:
+        # API Gateway Routes (prefixed with /api)
+        - path: /api/(auth/.*|products/.*|cart/.*|checkout/.*|orders/.*|admin/.*|health/.*|gateway/.*)
+          pathType: Prefix
+          backend:
+            service:
+              name: api-gateway
+              port:
+                number: {{ (index .Values.services "api-gateway").servicePort }}
+        # Frontend (Catch-all)
+        - path: /(.*)
+          pathType: Prefix
+          backend:
+            service:
+              name: frontend
+              port:
+                number: {{ .Values.services.frontend.servicePort }}
 {{- end }}
