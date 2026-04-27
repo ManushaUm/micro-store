@@ -25,6 +25,7 @@ ingress:
 services:
   frontend:
     enabled: true
+    useRegistry: true
     image: "manushau/frontend"
     tag: "latest"
     containerPort: 3000
@@ -36,6 +37,7 @@ services:
       
   api-gateway:
     enabled: true
+    useRegistry: true
     image: "manushau/api-gateway"
     tag: "latest"
     containerPort: 8080
@@ -44,6 +46,7 @@ services:
 
   auth-service:
     enabled: true
+    useRegistry: true
     image: "manushau/auth-service"
     tag: "latest"
     containerPort: 3001
@@ -54,6 +57,7 @@ services:
 
   catalog-service:
     enabled: true
+    useRegistry: true
     image: "manushau/catalog-service"
     tag: "latest"
     containerPort: 3002
@@ -64,6 +68,7 @@ services:
 
   cart-service:
     enabled: true
+    useRegistry: true
     image: "manushau/cart-service"
     tag: "latest"
     containerPort: 3003
@@ -74,6 +79,7 @@ services:
 
   checkout-service:
     enabled: true
+    useRegistry: true
     image: "manushau/checkout-service"
     tag: "latest"
     containerPort: 3004
@@ -84,6 +90,7 @@ services:
 
   email-service:
     enabled: true
+    useRegistry: true
     image: "manushau/email-service"
     tag: "latest"
     containerPort: 80
@@ -92,6 +99,7 @@ services:
 
   postgres:
     enabled: true
+    useRegistry: false
     image: "postgres"
     tag: "15-alpine"
     containerPort: 5432
@@ -103,6 +111,7 @@ services:
 
   rabbitmq:
     enabled: true
+    useRegistry: false
     image: "rabbitmq"
     tag: "3-management"
     containerPort: 5672

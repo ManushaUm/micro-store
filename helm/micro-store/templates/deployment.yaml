@@ -25,7 +25,7 @@ spec:
     spec:
       containers:
       - name: {{ $name }}
-        image: "{{ $.Values.global.imageRegistry }}/{{ $service.image }}:{{ $service.tag }}"
+        image: "{{ if $service.useRegistry }}{{ $.Values.global.imageRegistry }}/{{ end }}{{ $service.image }}:{{ $service.tag }}"
         imagePullPolicy: {{ $.Values.common.imagePullPolicy }}
         {{- if $service.containerPort }}
         ports:
