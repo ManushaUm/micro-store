@@ -80,12 +80,9 @@ jobs:
       - name: Setup Helm
         uses: azure/setup-helm@v3
 
-      - name: Ensure AKS-ACR Link and Secrets
+      - name: Ensure Image Pull Secret
         run: |
-          # Explicitly attach ACR to AKS (Managed Identity Link)
-          az aks update -n micro-store-aks -g micro-store-rg --attach-acr microstoreacr2026
-
-          # Fallback: Create imagePullSecret using ACR admin credentials
+          # Create imagePullSecret using ACR admin credentials (requires only Contributor/Reader access)
           ACR_PASSWORD=$(az acr credential show --name microstoreacr2026 --query "passwords[0].value" -o tsv)
           kubectl create secret docker-registry acr-secret \
             --namespace staging \
