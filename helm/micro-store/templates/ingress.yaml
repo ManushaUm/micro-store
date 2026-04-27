@@ -19,56 +19,56 @@ spec:
           service:
             name: api-gateway
             port:
-              number: {{ .Values.services.api-gateway.servicePort }}
+              number: {{ (index .Values.services "api-gateway").servicePort }}
       - path: /auth
         pathType: Prefix
         backend:
           service:
             name: api-gateway
             port:
-              number: {{ .Values.services.api-gateway.servicePort }}
+              number: {{ (index .Values.services "api-gateway").servicePort }}
       - path: /products
         pathType: Prefix
         backend:
           service:
             name: api-gateway
             port:
-              number: {{ .Values.services.api-gateway.servicePort }}
+              number: {{ (index .Values.services "api-gateway").servicePort }}
       - path: /cart
         pathType: Prefix
         backend:
           service:
             name: api-gateway
             port:
-              number: {{ .Values.services.api-gateway.servicePort }}
+              number: {{ (index .Values.services "api-gateway").servicePort }}
       - path: /checkout
         pathType: Prefix
         backend:
           service:
             name: api-gateway
             port:
-              number: {{ .Values.services.api-gateway.servicePort }}
+              number: {{ (index .Values.services "api-gateway").servicePort }}
       - path: /orders
         pathType: Prefix
         backend:
           service:
             name: api-gateway
             port:
-              number: {{ .Values.services.api-gateway.servicePort }}
+              number: {{ (index .Values.services "api-gateway").servicePort }}
       - path: /admin
         pathType: Prefix
         backend:
           service:
             name: api-gateway
             port:
-              number: {{ .Values.services.api-gateway.servicePort }}
+              number: {{ (index .Values.services "api-gateway").servicePort }}
       - path: /health
         pathType: Prefix
         backend:
           service:
             name: api-gateway
             port:
-              number: {{ .Values.services.api-gateway.servicePort }}
+              number: {{ (index .Values.services "api-gateway").servicePort }}
       # Frontend (Catch-all)
       - path: /
         pathType: Prefix
