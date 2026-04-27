@@ -66,6 +66,8 @@ services:
     servicePort: 3002
     env:
       PORT: "3002"
+      POSTGRES_PORT: "5432"
+      AZURE_CONTAINER_NAME: "product-images"
 
   cart-service:
     enabled: true
@@ -88,6 +90,7 @@ services:
     servicePort: 3004
     env:
       PORT: "3004"
+      POSTGRES_PORT: "5432"
 
   email-service:
     enabled: true
