@@ -49,6 +49,7 @@ jobs:
           if [ "${{ matrix.service }}" == "frontend" ]; then
             docker build \
               --build-arg NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+              --build-arg NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${{ secrets.STRIPE_PUBLISHABLE_KEY }} \
               -t $IMAGE_NAME:${{ github.sha }} \
               -t $IMAGE_NAME:latest \
               ./${{ matrix.service }}
