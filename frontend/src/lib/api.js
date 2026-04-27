@@ -12,9 +12,9 @@ import axios from 'axios';
  *   .env.production  → NEXT_PUBLIC_API_BASE_URL=http://48.206.130.22.nip.io:8080
  */
 const getBaseUrl = () => {
-  // Client-side: Use relative URL to stay on the same host (nip.io)
+  // Client-side: Use /api prefix so Ingress routes it to the Gateway
   if (typeof window !== 'undefined') {
-    return ''; 
+    return '/api'; 
   }
   // Server-side (SSR): Use the internal Kubernetes service name
   return process.env.NEXT_PUBLIC_API_BASE_URL || 'http://api-gateway:8080';
