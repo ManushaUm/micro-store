@@ -1,6 +1,5 @@
 {{- range $name, $service := .Values.services }}
 {{- if $service.enabled }}
-{{- if $service.serviceType }}
 ---
 apiVersion: v1
 kind: Service
@@ -10,12 +9,11 @@ metadata:
   labels:
     app: {{ $name }}
 spec:
-  type: {{ $service.serviceType }}
+  type: {{ default $.Values.common.serviceType $service.serviceType }}
   ports:
   - port: {{ $service.servicePort }}
     targetPort: {{ default $service.servicePort $service.containerPort }}
   selector:
     app: {{ $name }}
-{{- end }}
 {{- end }}
 {{- end }}
