@@ -194,7 +194,7 @@ export default function Home() {
 
       {/* CATEGORIES */}
       <div style={{ marginBottom: '2.5rem' }}>
-        <h2 style={{ fontSize: '1.4rem', fontWeight: '700', marginBottom: '1.25rem' }}>Shop by Category</h2>
+        <h2 style={{ fontSize: '1.4rem', fontWeight: '700', marginBottom: '1.25rem' }}>Available Category</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
           {categories.map((cat, i) => (
             <button key={i} onClick={() => document.getElementById('products').scrollIntoView({ behavior: 'smooth' })}
