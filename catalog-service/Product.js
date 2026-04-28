@@ -5,6 +5,7 @@ const productSchema = new mongoose.Schema({
   description: { type: String, required: true },
   price: { type: Number, required: true },
   imageUrl: { type: String },
+  category: { type: String, enum: ['audio', 'displays', 'keyboards', 'accessories'], default: 'accessories' },
   stock: { type: Number, default: 0 },
 });
 
