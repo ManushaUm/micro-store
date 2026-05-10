@@ -14,7 +14,7 @@ app.use(cors());
 connectDB();
 require('./rabbitmq');
 
-// ── Azure Blob Storage client ────────────────────────────────────────
+// Azure Blob Storage client
 const getBlobClient = () => {
   const accountName = process.env.AZURE_STORAGE_ACCOUNT_NAME;
   const accountKey  = process.env.AZURE_STORAGE_ACCOUNT_KEY;
@@ -25,7 +25,7 @@ const getBlobClient = () => {
   return BlobServiceClient.fromConnectionString(connStr);
 };
 
-// ── Multer (memory storage — buffer sent directly to Azure) ─────────
+// Multer (memory storage — buffer sent directly to Azure)
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB max
@@ -37,7 +37,7 @@ const upload = multer({
   }
 });
 
-// ── Admin middleware ─────────────────────────────────────────────────
+// Admin middleware
 const isAdmin = (req, res, next) => {
   const role = req.headers['x-user-role'];
   if (role !== 'admin') return res.status(403).json({ error: 'Forbidden' });
@@ -46,7 +46,7 @@ const isAdmin = (req, res, next) => {
 
 app.get('/health', (req, res) => res.send('Catalog Service Health OK'));
 
-// ── Image Upload Route (Admin only) ─────────────────────────────────
+// Image Upload Route (Admin only)
 // POST /products/upload-image  (multipart/form-data, field: "image")
 // Returns: { imageUrl: "https://microstoreprodimages.blob.core.windows.net/product-images/xxx.jpg" }
 app.post('/products/upload-image', isAdmin, upload.single('image'), async (req, res) => {
@@ -74,7 +74,7 @@ app.post('/products/upload-image', isAdmin, upload.single('image'), async (req, 
   }
 });
 
-// ── Get all products ─────────────────────────────────────────────────
+// Get all products
 app.get('/products', async (req, res) => {
   try {
     const { search, minPrice, maxPrice, sort } = req.query;
@@ -104,7 +104,7 @@ app.get('/products', async (req, res) => {
   }
 });
 
-// ── Get single product ───────────────────────────────────────────────
+// Get single product
 app.get('/products/:id', async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
@@ -115,7 +115,7 @@ app.get('/products/:id', async (req, res) => {
   }
 });
 
-// ── Add product (Admin only) ─────────────────────────────────────────
+// Add product (Admin only)
 app.post('/products', isAdmin, async (req, res) => {
   try {
     const newProduct = new Product(req.body);
@@ -126,7 +126,7 @@ app.post('/products', isAdmin, async (req, res) => {
   }
 });
 
-// ── Edit product (Admin only) ────────────────────────────────────────
+// Edit product (Admin only)
 app.put('/products/:id', isAdmin, async (req, res) => {
   try {
     const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -137,7 +137,7 @@ app.put('/products/:id', isAdmin, async (req, res) => {
   }
 });
 
-// ── Delete product (Admin only) ──────────────────────────────────────
+// Delete product (Admin only)
 app.delete('/products/:id', isAdmin, async (req, res) => {
   try {
     await Product.findByIdAndDelete(req.params.id);
@@ -147,7 +147,7 @@ app.delete('/products/:id', isAdmin, async (req, res) => {
   }
 });
 
-// ── Update stock (used by checkout/RabbitMQ) ─────────────────────────
+// Update stock (used by checkout/RabbitMQ)
 app.put('/products/:id/stock', isAdmin, async (req, res) => {
   try {
     const { quantity } = req.body;
@@ -161,7 +161,7 @@ app.put('/products/:id/stock', isAdmin, async (req, res) => {
   }
 });
 
-// ── Seed route (dev/testing only) ────────────────────────────────────
+// Seed route (dev/testing only)
 app.post('/products/seed', async (req, res) => {
   try {
     await Product.deleteMany({});

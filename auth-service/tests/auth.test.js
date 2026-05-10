@@ -7,14 +7,14 @@ const request = require('supertest');
 const jwt     = require('jsonwebtoken');
 const bcrypt  = require('bcryptjs');
 
-// ── Mock pg Pool before loading any module ───────────────────────
+// Mock pg Pool before loading any module
 const mockQuery = jest.fn();
 
 jest.mock('pg', () => {
   return { Pool: jest.fn(() => ({ query: mockQuery })) };
 });
 
-// ── Mock RabbitMQ (not needed for auth tests) ─────────────────────
+// Mock RabbitMQ (not needed for auth tests)
 jest.mock('amqp-connection-manager', () => ({
   connect: jest.fn().mockReturnValue({
     createChannel: jest.fn().mockReturnValue({
@@ -26,7 +26,7 @@ jest.mock('amqp-connection-manager', () => ({
   }),
 }));
 
-// ── Pre-seed initDB calls (runs once when module is first required) ──
+// Pre-seed initDB calls (runs once when module is first required)
 // initDB makes 3 queries: CREATE TABLE, ALTER ADD COLUMN, ALTER DROP NOT NULL
 mockQuery
   .mockResolvedValueOnce({ rows: [] }) // CREATE TABLE
@@ -38,10 +38,10 @@ const app = require('../index');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecretjwtkey';
 
-// ── Unit Tests: JWT ──────────────────────────────────────────────────
+// Unit Tests: JWT
 describe('[Unit] JWT helpers', () => {
   test('should sign and verify a token correctly', () => {
-    const payload = { id: 1, email: 'test@example.com', role: 'user' };
+    const payload = { id: 1, email: 'john@shopswift.dev', role: 'user' };
     const token   = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
     const decoded = jwt.verify(token, JWT_SECRET);
 
@@ -61,7 +61,7 @@ describe('[Unit] JWT helpers', () => {
   });
 });
 
-// ── Unit Tests: bcrypt ───────────────────────────────────────────────
+// Unit Tests: bcrypt
 describe('[Unit] bcrypt password hashing', () => {
   test('should hash and compare password correctly', async () => {
     const password = 'SecurePassword123!';
@@ -77,10 +77,10 @@ describe('[Unit] bcrypt password hashing', () => {
   });
 });
 
-// ── Integration Tests: /auth/register ────────────────────────────────
+// Integration Tests: /auth/register
 describe('[Integration] POST /auth/register', () => {
   test('should return 400 if email or password missing', async () => {
-    const res = await request(app).post('/auth/register').send({ email: 'test@example.com' });
+    const res = await request(app).post('/auth/register').send({ email: 'john@shopswift.dev' });
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/password/i);
   });
@@ -91,7 +91,7 @@ describe('[Integration] POST /auth/register', () => {
 
     const res = await request(app)
       .post('/auth/register')
-      .send({ email: 'exists@example.com', password: 'pass123' });
+      .send({ email: 'existing@shopswift.dev', password: 'pass123' });
 
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/already exists/i);
@@ -101,22 +101,22 @@ describe('[Integration] POST /auth/register', () => {
     // SELECT returns no user, INSERT returns new user
     mockQuery
       .mockResolvedValueOnce({ rows: [] })
-      .mockResolvedValueOnce({ rows: [{ id: 2, email: 'new@example.com', role: 'user' }] });
+      .mockResolvedValueOnce({ rows: [{ id: 2, email: 'newuser@shopswift.dev', role: 'user' }] });
 
     const res = await request(app)
       .post('/auth/register')
-      .send({ email: 'new@example.com', password: 'pass123' });
+      .send({ email: 'newuser@shopswift.dev', password: 'pass123' });
 
     expect(res.status).toBe(201);
-    expect(res.body).toHaveProperty('email', 'new@example.com');
+    expect(res.body).toHaveProperty('email', 'newuser@shopswift.dev');
     expect(res.body).toHaveProperty('role', 'user');
   });
 });
 
-// ── Integration Tests: /auth/login ───────────────────────────────────
+// Integration Tests: /auth/login
 describe('[Integration] POST /auth/login', () => {
   test('should return 400 if credentials missing', async () => {
-    const res = await request(app).post('/auth/login').send({ email: 'a@b.com' });
+    const res = await request(app).post('/auth/login').send({ email: 'incomplete@shopswift.dev' });
     expect(res.status).toBe(400);
   });
 
@@ -125,27 +125,27 @@ describe('[Integration] POST /auth/login', () => {
 
     const res = await request(app)
       .post('/auth/login')
-      .send({ email: 'notfound@test.com', password: 'pass' });
+      .send({ email: 'notfound@shopswift.dev', password: 'pass' });
     expect(res.status).toBe(401);
   });
 
   test('should return token on valid credentials', async () => {
     const hashed = await bcrypt.hash('correctpass', 10);
     mockQuery.mockResolvedValueOnce({
-      rows: [{ id: 1, email: 'user@test.com', password: hashed, role: 'user' }]
+      rows: [{ id: 1, email: 'user@shopswift.dev', password: hashed, role: 'user' }]
     });
 
     const res = await request(app)
       .post('/auth/login')
-      .send({ email: 'user@test.com', password: 'correctpass' });
+      .send({ email: 'user@shopswift.dev', password: 'correctpass' });
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty('token');
-    expect(res.body.user).toHaveProperty('email', 'user@test.com');
+    expect(res.body.user).toHaveProperty('email', 'user@shopswift.dev');
   });
 });
 
-// ── Integration Tests: /auth/verify ──────────────────────────────────
+// Integration Tests: /auth/verify
 describe('[Integration] GET /auth/verify', () => {
   test('should return 401 with no token', async () => {
     const res = await request(app).get('/auth/verify');
@@ -153,7 +153,7 @@ describe('[Integration] GET /auth/verify', () => {
   });
 
   test('should return decoded payload with valid token', async () => {
-    const token = jwt.sign({ id: 1, email: 'a@b.com', role: 'user' }, JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ id: 1, email: 'user@shopswift.dev', role: 'user' }, JWT_SECRET, { expiresIn: '1h' });
     const res = await request(app)
       .get('/auth/verify')
       .set('Authorization', `Bearer ${token}`);
@@ -163,7 +163,7 @@ describe('[Integration] GET /auth/verify', () => {
   });
 });
 
-// ── Health check ─────────────────────────────────────────────────────
+// Health check
 describe('[Integration] GET /health', () => {
   test('should return 200 OK', async () => {
     const res = await request(app).get('/health');
